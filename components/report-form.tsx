@@ -9,44 +9,63 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Camera, MapPin, Upload, Loader2 } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Camera, MapPin, Upload, Loader2, CheckCircle, AlertTriangle } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { getCurrentLocation, isValidLocation, type Location } from "@/lib/geolocation"
 
-interface ReportFormProps {
+interface EnhancedReportFormProps {
   userId: string
 }
 
-export default function ReportForm({ userId }: ReportFormProps) {
+export default function EnhancedReportForm({ userId }: EnhancedReportFormProps) {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [category, setCategory] = useState("")
   const [priority, setPriority] = useState("medium")
   const [photo, setPhoto] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
-  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [location, setLocation] = useState<Location | null>(null)
   const [address, setAddress] = useState("")
+  const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isGettingLocation, setIsGettingLocation] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
-  const getLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          })
-          // Reverse geocoding would go here in a real app
-          setAddress(`${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`)
-        },
-        (error) => {
-          setError("Unable to get your location. Please enable location services.")
-        },
-      )
-    } else {
-      setError("Geolocation is not supported by this browser.")
+  const getLocation = async () => {
+    setIsGettingLocation(true)
+    setError(null)
+
+    try {
+      const currentLocation = await getCurrentLocation()
+
+      if (!isValidLocation(currentLocation)) {
+        throw new Error("Invalid location coordinates received")
+      }
+
+      setLocation(currentLocation)
+
+      // Get additional location info if available
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setLocationAccuracy(position.coords.accuracy)
+          },
+          () => {
+            // Ignore accuracy errors
+          },
+          { enableHighAccuracy: true },
+        )
+      }
+
+      // Simple reverse geocoding (in a real app, you'd use a proper geocoding service)
+      setAddress(`${currentLocation.latitude.toFixed(6)}, ${currentLocation.longitude.toFixed(6)}`)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Unable to get your location")
+    } finally {
+      setIsGettingLocation(false)
     }
   }
 
@@ -66,6 +85,11 @@ export default function ReportForm({ userId }: ReportFormProps) {
     e.preventDefault()
     if (!photo || !location || !category) {
       setError("Please fill in all required fields, add a photo, and get your location.")
+      return
+    }
+
+    if (!isValidLocation(location)) {
+      setError("Invalid location data. Please get your location again.")
       return
     }
 
@@ -95,8 +119,8 @@ export default function ReportForm({ userId }: ReportFormProps) {
         description,
         category,
         priority,
-        latitude: location.lat,
-        longitude: location.lng,
+        latitude: location.latitude,
+        longitude: location.longitude,
         address,
         photo_url: photoUrl,
         photo_filename: filename,
@@ -114,12 +138,33 @@ export default function ReportForm({ userId }: ReportFormProps) {
       setPhotoPreview(null)
       setLocation(null)
       setAddress("")
+      setLocationAccuracy(null)
 
       router.refresh()
     } catch (error) {
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const getLocationAccuracyInfo = () => {
+    if (!locationAccuracy) return null
+
+    if (locationAccuracy <= 10) {
+      return {
+        icon: <CheckCircle className="w-4 h-4 text-green-600" />,
+        text: "High accuracy",
+        color: "text-green-600",
+      }
+    } else if (locationAccuracy <= 50) {
+      return { icon: <CheckCircle className="w-4 h-4 text-blue-600" />, text: "Good accuracy", color: "text-blue-600" }
+    } else {
+      return {
+        icon: <AlertTriangle className="w-4 h-4 text-yellow-600" />,
+        text: "Low accuracy",
+        color: "text-yellow-600",
+      }
     }
   }
 
@@ -217,15 +262,54 @@ export default function ReportForm({ userId }: ReportFormProps) {
           <div className="grid gap-2">
             <Label>Location</Label>
             <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={getLocation} className="flex-1 bg-transparent">
-                <MapPin className="w-4 h-4 mr-2" />
-                {location ? "Update Location" : "Get Current Location"}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={getLocation}
+                className="flex-1 bg-transparent"
+                disabled={isGettingLocation}
+              >
+                {isGettingLocation ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Getting Location...
+                  </>
+                ) : (
+                  <>
+                    <MapPin className="w-4 h-4 mr-2" />
+                    {location ? "Update Location" : "Get Current Location"}
+                  </>
+                )}
               </Button>
             </div>
-            {location && <p className="text-sm text-gray-600 mt-1">Location: {address}</p>}
+
+            {location && (
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">Location: {address}</p>
+                {locationAccuracy && (
+                  <div className="flex items-center gap-2 text-sm">
+                    {getLocationAccuracyInfo()?.icon}
+                    <span className={getLocationAccuracyInfo()?.color}>
+                      {getLocationAccuracyInfo()?.text} (±{Math.round(locationAccuracy)}m)
+                    </span>
+                  </div>
+                )}
+                <Alert className="bg-green-50 border-green-200">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-700">
+                    Location captured successfully. This will help authorities locate and fix the issue quickly.
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
           </div>
 
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && (
+            <Alert className="bg-red-50 border-red-200">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-700">{error}</AlertDescription>
+            </Alert>
+          )}
 
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (

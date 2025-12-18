@@ -2,8 +2,8 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { MapPin, Camera, CheckCircle, Crown, Shield, AlertTriangle } from "lucide-react"
+import { GlassCard } from "@/components/ui/glass-card"
+import { MapPin, Camera, CheckCircle, Crown, Shield, AlertTriangle, ArrowRight, Activity } from "lucide-react"
 
 export default async function HomePage() {
   let user = null
@@ -18,7 +18,6 @@ export default async function HomePage() {
     user = authUser
 
     if (user) {
-      // Get user profile to determine redirect
       const { data: userProfile } = await supabase
         .from("profiles")
         .select("user_type, approval_status")
@@ -27,7 +26,7 @@ export default async function HomePage() {
       profile = userProfile
 
       if (profile?.user_type === "government" && profile.approval_status !== "approved") {
-        // Don't redirect pending government users, let them see the home page with a message
+        // Pending government users stay here
       } else if (profile?.user_type === "admin" || profile?.user_type === "super_admin") {
         redirect("/admin")
       } else if (profile?.user_type === "government") {
@@ -37,195 +36,174 @@ export default async function HomePage() {
       }
     }
   } catch (error) {
-    // Check if this is a Next.js redirect (which is expected behavior)
     if (error && typeof error === 'object' && 'digest' in error) {
       const digest = (error as any).digest
       if (typeof digest === 'string' && digest.includes('NEXT_REDIRECT')) {
-        // This is a redirect, not an error - let it propagate
         throw error
       }
     }
-    
-    // This is an actual Supabase configuration error
     console.error("[Samadhan] Supabase configuration error:", error)
     isSupabaseConfigured = false
   }
 
   if (!isSupabaseConfigured) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/10">
-        <div className="container mx-auto px-4 py-16">
-          <div className="text-center mb-16">
-            <div className="flex items-center justify-center mb-6">
-              <AlertTriangle className="w-16 h-16 text-amber-500 mr-4" />
-              <div className="flex flex-col items-center">
-                <h1 className="text-4xl md:text-6xl font-bold text-primary mb-2 text-balance">Samadhan</h1>
-                <p className="text-lg text-secondary font-medium">Setup Required</p>
-              </div>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <GlassCard className="max-w-xl w-full p-8 border-amber-500/30 bg-amber-500/10">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-20 h-20 rounded-full bg-amber-500/20 flex items-center justify-center mb-6">
+              <AlertTriangle className="w-10 h-10 text-amber-500" />
             </div>
-
-            <Card className="max-w-2xl mx-auto border-amber-200 bg-amber-50/50">
-              <CardHeader>
-                <CardTitle className="text-amber-800 flex items-center justify-center">
-                  <AlertTriangle className="w-6 h-6 mr-2" />
-                  Environment Setup Required
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-left space-y-4">
-                <p className="text-amber-700">
-                  Your Samadhan app needs to be configured with Supabase credentials to work properly.
-                </p>
-
-                <div className="bg-white/80 p-4 rounded-lg border border-amber-200">
-                  <h3 className="font-semibold text-amber-800 mb-2">Quick Setup Steps:</h3>
-                  <ol className="list-decimal list-inside space-y-2 text-sm text-amber-700">
-                    <li>
-                      Create a <code className="bg-amber-100 px-1 rounded">.env.local</code> file in your project root
-                    </li>
-                    <li>
-                      Copy your Supabase URL and keys from{" "}
-                      <a
-                        href="https://supabase.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 underline"
-                      >
-                        supabase.com
-                      </a>
-                    </li>
-                    <li>
-                      Add them to your <code className="bg-amber-100 px-1 rounded">.env.local</code> file
-                    </li>
-                    <li>
-                      Restart your development server: <code className="bg-amber-100 px-1 rounded">npm run dev</code>
-                    </li>
-                  </ol>
-                </div>
-
-                <div className="bg-gray-900 text-green-400 p-4 rounded-lg text-sm font-mono">
-                  <div className="text-gray-400 mb-2"># .env.local</div>
-                  <div>NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co</div>
-                  <div>NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here</div>
-                  <div>SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here</div>
-                </div>
-
-                <p className="text-sm text-amber-600">
-                  See the <code className="bg-amber-100 px-1 rounded">README.md</code> file for detailed setup
-                  instructions.
-                </p>
-              </CardContent>
-            </Card>
+            <h1 className="text-3xl font-bold text-amber-600 mb-2">Configuration Required</h1>
+            <p className="text-amber-800/80 mb-6">
+              Samadhan needs Supabase credentials to function. Please check your setup.
+            </p>
+            <div className="bg-black/50 p-4 rounded-lg text-left w-full overflow-x-auto mb-6">
+              <code className="text-green-400 text-sm">
+                NEXT_PUBLIC_SUPABASE_URL=...<br />
+                NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+              </code>
+            </div>
+            <p className="text-sm text-amber-700">
+              Refer to <span className="font-semibold bg-amber-200/50 px-1 rounded">README.md</span> for details.
+            </p>
           </div>
-        </div>
+        </GlassCard>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/10">
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-16">
-          <div className="flex items-center justify-center mb-6">
-            <Crown className="w-16 h-16 text-accent mr-4" />
-            <div className="flex flex-col items-center">
-              <h1 className="text-4xl md:text-6xl font-bold text-primary mb-2 text-balance">Samadhan</h1>
-              <p className="text-lg text-secondary font-medium">Civic Infrastructure Solutions</p>
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-accent rounded-full mx-1" />
-                <div className="w-3 h-3 bg-primary rounded-full mx-1" />
-                <div className="w-3 h-3 bg-accent rounded-full mx-1" />
-              </div>
+    <div className="min-h-screen flex flex-col">
+      {/* Navigation */}
+      <nav className="fixed top-0 w-full z-50 border-b border-border/40 bg-background/60 backdrop-blur-md">
+        <div className="container mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Crown className="w-6 h-6 text-accent" />
+            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/80 dark:from-white dark:to-white/80">
+              Samadhan
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link href="/auth/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              Sign In
+            </Link>
+            <Button asChild className="rounded-full px-6 shadow-lg">
+              <Link href="/auth/sign-up">Get Started</Link>
+            </Button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-background/50 border border-border/50 text-accent-foreground text-sm font-medium mb-6 backdrop-blur-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
+              </span>
+              Modern Civic Infrastructure
+            </div>
+            <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-6 leading-tight tracking-tight">
+              Report. Track. <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accent/60">
+                Resolve Together.
+              </span>
+            </h1>
+            <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
+              Empowering citizens with next-gen tools to report infrastructure issues and tracking government resolution in real-time.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button asChild size="lg" className="rounded-full text-lg h-14 px-8 bg-accent text-primary hover:bg-accent/90 shadow-lg shadow-accent/20">
+                <Link href="/auth/sign-up">
+                  Launch Platform <ArrowRight className="ml-2 w-5 h-5" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="rounded-full text-lg h-14 px-8 border-border/50 bg-background/50 text-foreground hover:bg-background/80 backdrop-blur-sm">
+                <Link href="/auth/login">Access Dashboard</Link>
+              </Button>
             </div>
           </div>
-          <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto text-pretty">
-            A sophisticated platform connecting citizens with government authorities to resolve infrastructure issues
-            efficiently. Report problems, track solutions, and build better communities together.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              asChild
-              size="lg"
-              className="text-lg px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              <Link href="/auth/sign-up">Join Samadhan</Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="text-lg px-8 py-3 border-primary text-primary hover:bg-primary/10 bg-transparent"
-            >
-              <Link href="/auth/login">Sign In</Link>
-            </Button>
+        </div>
+      </section>
+
+      {/* Features Grid */}
+      <section className="py-20 relative">
+        <div className="container mx-auto px-6">
+          <div className="grid md:grid-cols-3 gap-6">
+            <GlassCard className="p-8 group">
+              <div className="w-14 h-14 rounded-2xl bg-blue-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <Camera className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-3">Smart Reporting</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Capture photo evidence with automatic geolocation. AI-assisted categorization ensures reports reach the right department instantly.
+              </p>
+            </GlassCard>
+
+            <GlassCard className="p-8 group" gradient>
+              <div className="w-14 h-14 rounded-2xl bg-accent/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <Activity className="w-7 h-7 text-accent" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-3">Real-time Tracking</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Watch as your reports move from "Received" to "Resolved". Get instant notifications and visual proof of completion.
+              </p>
+            </GlassCard>
+
+            <GlassCard className="p-8 group">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <Shield className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-3">Verified Resolution</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Government officials provide location-verified proof of fixes. Transparency ensures accountability at every level.
+              </p>
+            </GlassCard>
           </div>
         </div>
+      </section>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-          <Card className="text-center border-border/50 hover:border-accent/50 transition-colors">
-            <CardHeader>
-              <Camera className="w-12 h-12 mx-auto text-accent mb-4" />
-              <CardTitle className="text-primary">Photo Evidence</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription>
-                Capture issues with automatic geolocation for precise documentation and royal accountability
-              </CardDescription>
-            </CardContent>
-          </Card>
-
-          <Card className="text-center border-border/50 hover:border-primary/50 transition-colors">
-            <CardHeader>
-              <MapPin className="w-12 h-12 mx-auto text-primary mb-4" />
-              <CardTitle className="text-primary">Precise Location</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription>
-                GPS coordinates ensure authorities can locate and address issues with royal precision
-              </CardDescription>
-            </CardContent>
-          </Card>
-
-          <Card className="text-center border-border/50 hover:border-accent/50 transition-colors">
-            <CardHeader>
-              <Shield className="w-12 h-12 mx-auto text-accent mb-4" />
-              <CardTitle className="text-primary">Government Response</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription>
-                Direct communication with approved authorities and real-time status updates
-              </CardDescription>
-            </CardContent>
-          </Card>
-
-          <Card className="text-center border-border/50 hover:border-primary/50 transition-colors">
-            <CardHeader>
-              <CheckCircle className="w-12 h-12 mx-auto text-primary mb-4" />
-              <CardTitle className="text-primary">Royal Tracking</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription>
-                Monitor your reports from submission to resolution with complete transparency
-              </CardDescription>
-            </CardContent>
-          </Card>
+      {/* Stats/Trust Section */}
+      <section className="py-20 border-t border-border/50 bg-background/50 backdrop-blur-sm">
+        <div className="container mx-auto px-6">
+          <div className="grid md:grid-cols-4 gap-8 text-center">
+            <div>
+              <div className="text-4xl font-bold text-foreground mb-2">100%</div>
+              <div className="text-muted-foreground font-medium">Digital Workflow</div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold text-foreground mb-2">GPS</div>
+              <div className="text-muted-foreground font-medium">Precise Location</div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold text-foreground mb-2">24/7</div>
+              <div className="text-muted-foreground font-medium">System Availability</div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold text-foreground mb-2">Secure</div>
+              <div className="text-muted-foreground font-medium">Enterprise Grade</div>
+            </div>
+          </div>
         </div>
+      </section>
 
-        <div className="text-center bg-card/50 rounded-lg p-8 border border-border/50">
-          <Crown className="w-12 h-12 mx-auto text-accent mb-4" />
-          <h2 className="text-3xl font-bold text-primary mb-4">Ready to Make a Difference?</h2>
-          <p className="text-lg text-muted-foreground mb-8">
-            Join Samadhan's network of engaged citizens and dedicated officials working together for infrastructure
-            excellence
-          </p>
-          <Button
-            asChild
-            size="lg"
-            className="text-lg px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground"
-          >
-            <Link href="/auth/sign-up">Get Started with Samadhan</Link>
-          </Button>
+      {/* Footer */}
+      <footer className="py-12 border-t border-border/40 mt-auto bg-background/30 backdrop-blur-sm">
+        <div className="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-2">
+            <Crown className="w-5 h-5 text-muted-foreground" />
+            <span className="text-muted-foreground font-medium">Samadhan by Government of India</span>
+          </div>
+          <div className="flex gap-8 text-sm text-muted-foreground">
+            <Link href="#" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+            <Link href="#" className="hover:text-foreground transition-colors">Terms of Service</Link>
+            <Link href="/doctors" className="hover:text-foreground transition-colors">Contact Support</Link>
+          </div>
         </div>
-      </div>
+      </footer>
     </div>
   )
 }

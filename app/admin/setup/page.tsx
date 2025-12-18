@@ -3,6 +3,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { createBrowserClient } from "@supabase/ssr"
+import { env } from "@/lib/env"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,8 +18,8 @@ export default function AdminSetup() {
   const [loading, setLoading] = useState(false)
 
   const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   )
 
   const createInitialAdmin = async (e: React.FormEvent) => {
@@ -93,7 +94,7 @@ export default function AdminSetup() {
             Create the initial super administrator account for the Samadhan platform.
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent className="space-y-6">
           {/* Security Warning */}
           <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 hover:shadow-md transition-all duration-300">
@@ -158,8 +159,8 @@ export default function AdminSetup() {
               />
             </div>
 
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
               disabled={loading}
             >

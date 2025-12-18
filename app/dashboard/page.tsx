@@ -5,7 +5,8 @@ import IssuesList from "@/components/issues-list"
 import { NotificationProvider } from "@/components/notification-provider"
 import NotificationBell from "@/components/notification-bell"
 import { Button } from "@/components/ui/button"
-import { 
+import { GlassCard } from "@/components/ui/glass-card"
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -35,21 +36,21 @@ export default async function DashboardPage() {
 
   return (
     <NotificationProvider userId={user.id} userType={profile.user_type}>
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/10">
-        <header className="bg-white/95 backdrop-blur-sm shadow-sm border-b sticky top-0 z-50">
+      <div className="min-h-screen bg-transparent">
+        <header className="bg-white/10 backdrop-blur-md shadow-sm border-b border-white/20 sticky top-0 z-50">
           <div className="container mx-auto px-4 py-3 sm:py-4">
             <div className="flex items-center justify-between">
               {/* Logo and Brand - Mobile Optimized */}
               <div className="flex items-center gap-3">
-                <Crown className="w-8 h-8 sm:w-10 sm:h-10 text-accent" />
+                <Crown className="w-8 h-8 sm:w-10 sm:h-10 text-accent drop-shadow-md" />
                 <div className="flex flex-col">
                   <div className="flex items-center gap-1 mb-1 sm:mb-0">
-                    <div className="w-2 h-2 bg-accent rounded-full" />
-                    <div className="w-2 h-2 bg-primary rounded-full" />
-                    <div className="w-2 h-2 bg-accent rounded-full" />
+                    <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse delay-75" />
+                    <div className="w-2 h-2 bg-accent rounded-full animate-pulse delay-150" />
                   </div>
                   <h1 className="text-xl sm:text-2xl font-bold text-primary">Samadhan</h1>
-                  <p className="text-xs sm:text-sm text-secondary font-medium hidden sm:block">
+                  <p className="text-xs sm:text-sm text-muted-foreground font-medium hidden sm:block">
                     Government Dashboard
                   </p>
                 </div>
@@ -57,21 +58,21 @@ export default async function DashboardPage() {
 
               {/* Desktop Navigation */}
               <div className="hidden md:flex items-center gap-4">
-                <div className="text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">{profile.full_name}</span>
-                  <div className="text-xs">{profile.organization}</div>
+                <div className="text-sm text-right">
+                  <span className="font-medium text-foreground block">{profile.full_name}</span>
+                  <div className="text-xs text-muted-foreground">{profile.organization}</div>
                 </div>
                 <NotificationBell />
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-secondary/10 rounded-full text-sm">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-secondary/10 border border-secondary/20 rounded-full text-sm">
                   <Shield className="w-4 h-4 text-secondary" />
                   <span className="capitalize font-medium text-secondary">{profile.user_type}</span>
                 </div>
-                <Button variant="ghost" size="sm" className="hover:bg-accent/10 hover:text-accent">
+                <Button variant="ghost" size="sm" className="hover:bg-accent/10 hover:text-accent font-medium">
                   <Settings className="w-4 h-4 mr-2" />
                   Settings
                 </Button>
                 <form action="/auth/logout" method="post">
-                  <Button variant="ghost" size="sm" type="submit" className="hover:bg-destructive/10 hover:text-destructive">
+                  <Button variant="ghost" size="sm" type="submit" className="hover:bg-destructive/10 hover:text-destructive font-medium">
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
                   </Button>
@@ -88,7 +89,7 @@ export default async function DashboardPage() {
                       <span className="sr-only">Open menu</span>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuContent align="end" className="w-56 bg-white/95 backdrop-blur-md">
                     <div className="px-3 py-2">
                       <p className="text-sm font-medium">{profile.full_name}</p>
                       <p className="text-xs text-muted-foreground">{profile.organization}</p>
@@ -119,9 +120,9 @@ export default async function DashboardPage() {
 
             {/* Mobile User Info */}
             <div className="md:hidden mt-2 pt-2 border-t border-border/50">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground flex justify-between items-center">
                 <span className="font-medium text-foreground">{profile.full_name}</span>
-                <span className="text-xs block">{profile.organization}</span>
+                <span className="text-xs bg-secondary/10 px-2 py-0.5 rounded-full text-secondary">{profile.organization}</span>
               </p>
             </div>
           </div>
@@ -129,12 +130,12 @@ export default async function DashboardPage() {
 
         <main className="container mx-auto px-4 py-6 sm:py-8">
           <div className="space-y-6 sm:space-y-8">
-            <div className="bg-white/80 backdrop-blur-sm rounded-lg border border-border/50 shadow-sm p-4 sm:p-6">
+            <GlassCard className="p-4 sm:p-6" gradient>
               <DashboardStats />
-            </div>
-            <div className="bg-white/80 backdrop-blur-sm rounded-lg border border-border/50 shadow-sm">
+            </GlassCard>
+            <GlassCard className="overflow-hidden">
               <IssuesList userId={user.id} />
-            </div>
+            </GlassCard>
           </div>
         </main>
       </div>

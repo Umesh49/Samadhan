@@ -5,8 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { MapPin, Clock, User, Search, Filter } from "lucide-react"
-import IssueModal from "@/components/issue-modal"
+import { MapPin, Clock, User, Search, Filter, X } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { env } from "@/lib/env"
 
 interface Issue {
   id: string
@@ -44,6 +47,9 @@ export default function IssuesList({ userId }: IssuesListProps) {
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [priorityFilter, setPriorityFilter] = useState("all")
 
+  // Modal State
+  const [isUpdating, setIsUpdating] = useState(false)
+
   useEffect(() => {
     const fetchIssues = async () => {
       const supabase = createClient()
@@ -61,8 +67,8 @@ export default function IssuesList({ userId }: IssuesListProps) {
         .order("created_at", { ascending: false })
 
       if (!error && data) {
-        setIssues(data)
-        setFilteredIssues(data)
+        setIssues(data as any)
+        setFilteredIssues(data as any)
       }
       setIsLoading(false)
     }
@@ -113,15 +119,15 @@ export default function IssuesList({ userId }: IssuesListProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "reported":
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
       case "in_progress":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
       case "resolved":
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
       case "rejected":
-        return "bg-red-100 text-red-800"
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
     }
   }
 
@@ -140,11 +146,40 @@ export default function IssuesList({ userId }: IssuesListProps) {
     }
   }
 
+  const handleStatusUpdate = async (newStatus: string) => {
+    if (!selectedIssue) return
+    setIsUpdating(true)
+    const supabase = createClient()
+
+    // Optimistic update
+    const updatedIssue = { ...selectedIssue, status: newStatus }
+    setSelectedIssue(updatedIssue)
+    setIssues(prev => prev.map(i => i.id === selectedIssue.id ? updatedIssue : i))
+
+    try {
+      await supabase
+        .from('issues')
+        .update({ status: newStatus })
+        .eq('id', selectedIssue.id)
+
+      await supabase.from('issue_responses').insert({
+        issue_id: selectedIssue.id,
+        responder_id: userId,
+        content: `Status updated to ${newStatus.replace('_', ' ')}`,
+        is_internal: false
+      })
+    } catch (err) {
+      console.error("Failed to update status", err)
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <Card>
         <CardContent className="p-6">
-          <p className="text-center text-gray-500">Loading issues...</p>
+          <p className="text-center text-muted-foreground">Loading issues...</p>
         </CardContent>
       </Card>
     )
@@ -218,31 +253,33 @@ export default function IssuesList({ userId }: IssuesListProps) {
         </CardHeader>
         <CardContent>
           {filteredIssues.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">No issues found matching your filters.</p>
+            <p className="text-center text-muted-foreground py-8">No issues found matching your filters.</p>
           ) : (
             <div className="space-y-4">
               {filteredIssues.map((issue) => (
                 <div
                   key={issue.id}
-                  className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                  className="border rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
                   onClick={() => setSelectedIssue(issue)}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="font-semibold text-lg">{issue.title}</h3>
                     <div className="flex gap-2">
-                      <Badge className={getStatusColor(issue.status)}>{issue.status.replace("_", " ")}</Badge>
-                      <Badge className={getPriorityColor(issue.priority)}>{issue.priority}</Badge>
+                      <Badge className={getStatusColor(issue.status)} variant="secondary">{issue.status.replace("_", " ")}</Badge>
+                      <Badge className={getPriorityColor(issue.priority)} variant="outline">{issue.priority}</Badge>
                     </div>
                   </div>
                   <div className="flex gap-4">
-                    <img
-                      src={issue.photo_url || "/placeholder.svg"}
-                      alt={issue.title}
-                      className="w-24 h-24 object-cover rounded-md"
-                    />
+                    {issue.photo_url && (
+                      <img
+                        src={issue.photo_url}
+                        alt={issue.title}
+                        className="w-24 h-24 object-cover rounded-md"
+                      />
+                    )}
                     <div className="flex-1 space-y-2">
-                      <p className="text-gray-600 text-sm line-clamp-2">{issue.description}</p>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <p className="text-muted-foreground text-sm line-clamp-2">{issue.description}</p>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <MapPin className="w-4 h-4" />
                           <span>{issue.address}</span>
@@ -268,17 +305,78 @@ export default function IssuesList({ userId }: IssuesListProps) {
         </CardContent>
       </Card>
 
-      {selectedIssue && (
-        <IssueModal
-          issue={selectedIssue}
-          userId={userId}
-          onClose={() => setSelectedIssue(null)}
-          onUpdate={(updatedIssue) => {
-            setIssues((prev) => prev.map((issue) => (issue.id === updatedIssue.id ? updatedIssue : issue)))
-            setSelectedIssue(updatedIssue)
-          }}
-        />
-      )}
+      {/* Inline Modal */}
+      <Dialog open={!!selectedIssue} onOpenChange={(open) => !open && setSelectedIssue(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedIssue?.title}</DialogTitle>
+          </DialogHeader>
+
+          {selectedIssue && (
+            <div className="space-y-6">
+              <div className="aspect-video relative rounded-lg overflow-hidden bg-muted">
+                <img
+                  src={selectedIssue.photo_url || "/placeholder.svg"}
+                  alt={selectedIssue.title}
+                  className="object-cover w-full h-full"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">Status</Label>
+                  <div className="mt-1">
+                    <Select
+                      value={selectedIssue.status}
+                      onValueChange={handleStatusUpdate}
+                      disabled={isUpdating}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="reported">Reported</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="resolved">Resolved</SelectItem>
+                        <SelectItem value="rejected">Rejected</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Priority</Label>
+                  <div className="mt-1 font-medium capitalize">{selectedIssue.priority}</div>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Category</Label>
+                  <div className="mt-1 font-medium capitalize">{selectedIssue.category.replace('_', ' ')}</div>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Reported By</Label>
+                  <div className="mt-1 font-medium">{selectedIssue.profiles?.full_name}</div>
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-muted-foreground">Description</Label>
+                <p className="mt-1">{selectedIssue.description}</p>
+              </div>
+
+              <div>
+                <Label className="text-muted-foreground">Location</Label>
+                <p className="mt-1 flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  {selectedIssue.address}
+                </p>
+              </div>
+
+              <div className="flex justify-end">
+                <Button variant="outline" onClick={() => setSelectedIssue(null)}>Close</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -1,12 +1,12 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
-import EnhancedReportForm from "@/components/enhanced-report-form"
+import EnhancedReportForm from "@/components/report-form"
 import RecentIssues from "@/components/recent-issues"
 import { NotificationProvider } from "@/components/notification-provider"
 import NotificationBell from "@/components/notification-bell"
 import RealTimeStatus from "@/components/real-time-status"
 import { Button } from "@/components/ui/button"
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -35,7 +35,7 @@ export default async function ReportPage() {
   }
 
   return (
-    <NotificationProvider userId={user.id} userType={profile.user_type}>
+    <NotificationProvider userId={user.id} userType={profile.user_type as "citizen" | "government"}>
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/10">
         <header className="bg-card/95 backdrop-blur-sm shadow-sm border-b border-border/50 sticky top-0 z-50">
           <div className="container mx-auto px-4 py-3 sm:py-4">
@@ -65,10 +65,10 @@ export default async function ReportPage() {
                   <span className="capitalize font-semibold text-accent-foreground">{profile.user_type}</span>
                 </div>
                 <form action="/auth/logout" method="post">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    type="submit" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    type="submit"
                     className="hover:bg-destructive/10 hover:text-destructive border border-transparent hover:border-destructive/20 transition-all duration-200"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
@@ -131,7 +131,7 @@ export default async function ReportPage() {
                 <EnhancedReportForm userId={user.id} />
               </div>
             </div>
-            
+
             <div className="space-y-6">
               <div className="flex items-center gap-3 pb-2 border-b border-primary/20">
                 <Crown className="w-6 h-6 text-primary drop-shadow-sm" />
