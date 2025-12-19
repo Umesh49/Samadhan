@@ -31,7 +31,7 @@ Connects citizens with government authorities to resolve issues like potholes, s
 
 ```bash
 # 1. Clone & install
-git clone https://github.com/your-username/samadhan.git
+git clone https://github.com/Umesh49/Samadhan.git
 cd samadhan
 npm install
 
