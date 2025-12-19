@@ -1,15 +1,23 @@
-# Samadhan
+# Samadhan 🏛️
 
-A civic infrastructure reporting platform connecting citizens with government authorities to report and resolve issues like potholes, broken streetlights, and drainage problems.
+> **A Next-Gen Civic Infrastructure Reporting Platform**
 
+Connects citizens with government authorities to resolve issues like potholes, streetlights, and drainage with real-time tracking and location verification.
+
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Visit_Site-2ea44f?style=for-the-badge&logo=vercel)](https://samadhan-three.vercel.app/)
+
+> [!IMPORTANT]
+> **Backend Status Notice**: The live demo uses a free-tier Supabase backend which pauses after inactivity. If the demo isn't loading data, please follow the [Quick Start](#quick-start) guide to run the full application locally with your own Supabase credentials.
+
+![Banner](https://img.shields.io/badge/Status-Maintained-green)
 ![Next.js](https://img.shields.io/badge/Next.js-14-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
-![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green)
-![Tailwind](https://img.shields.io/badge/Tailwind-CSS-38bdf8)
+![Supabase](https://img.shields.io/badge/Supabase-Database-green)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ---
 
-## Features
+## 📸 Screenshotsures
 
 | Role | Capabilities |
 |------|-------------|
@@ -114,6 +122,23 @@ After database setup:
 
 ---
 
-## License
+---
 
-MIT License - free to use for civic projects.
+## 🚀 Future Scope
+
+- **AI Image Analysis**: Automatically verify the severity of reported potholes/issues using Computer Vision.
+- **Offline Mode**: Allow reporting issues in low-connectivity areas with background sync.
+- **Public Leaderboard**: Gamification to reward the most active citizens.
+
+## 🎓 Learning Outcomes
+
+This project was built to demonstrate proficiency in:
+- **Full Stack Development**: Next.js App Router & Server Actions.
+- **Database Architecture**: Complex relationships & RLS policies in PostgreSQL (Supabase).
+- **Modern UI/UX**: Implementing a custom Glassmorphism design system with Tailwind CSS.
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

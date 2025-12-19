@@ -1,7 +1,17 @@
 {
   "name": "samadhan-app",
   "version": "1.0.0",
-  "description": "Civic Infrastructure Reporting App",
+  "description": "A comprehensive civic infrastructure reporting platform built with Next.js and Supabase.",
+  "author": "Umesh",
+  "license": "MIT",
+  "keywords": [
+    "nextjs",
+    "supabase",
+    "civic-tech",
+    "react",
+    "glassmorphism",
+    "portfolio"
+  ],
   "private": true,
   "scripts": {
     "dev": "next dev",
